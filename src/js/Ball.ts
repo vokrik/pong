@@ -3,7 +3,7 @@ import {AbstractVector, Vector} from "vector2d";
 import {BoundingBox} from "./BoundingBox";
 
 
-const DEFAULT_SPEED_MULTIPLIER = 2
+const DEFAULT_SPEED_MULTIPLIER = 0.05
 export const BALL_RADIUS_PERCENT = 0.015
 
 export default class Ball {
@@ -51,14 +51,14 @@ export default class Ball {
         }
     }
 
-    public update() {
+    public update(elapsedTimeMs: number) {
         if(!this.isActive) {
             return
         }
         this.previousPosition = this.position
         this.position = {
-            x: this.position.x + this.direction.x  * this.speed,
-            y: this.position.y + this.direction.y  * this.speed
+            x: this.position.x + this.direction.x  * this.speed * elapsedTimeMs,
+            y: this.position.y + this.direction.y  * this.speed * elapsedTimeMs
         }
     }
 

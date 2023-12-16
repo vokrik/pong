@@ -9,10 +9,10 @@ import CanvasAnalyzer from "./CanvasAnalyzer";
 import Particle from "./Particle";
 import {Bounds, BOUNDS_TYPE, SIDE} from "./Bounds";
 
-const PADDLE_WIDTH_PERCENT = 0.01
-const PADDLE_HEIGHT_PERCENT = 0.3
+const PADDLE_WIDTH_PERCENT = 0.023
+const PADDLE_HEIGHT_PERCENT = 0.2
 const PADDLE_DISTANCE_FROM_SIDE_PERCENT = 0.1
-
+const OPPONENT_IDLE_INCORRECTNESS = 0.4
 
 export default class Board {
 
@@ -73,12 +73,25 @@ export default class Board {
 
     private convertScoreToParticles() {
         this.scoreParticles = CanvasAnalyzer.convertCanvasToParticles(this.width, this.height, 4, () => {
+
+
             this.ctx.fillStyle = "white"
             this.ctx.font = `120px Helvetica`
             this.ctx.textAlign = "center"
             this.ctx.textBaseline = "middle"
             this.ctx.clearRect(0, 0, this.width, this.height)
             this.ctx.fillText(`${this.score.player} : ${this.score.opponent}`, this.width / 2, this.height / 2)
+            this.ctx.beginPath();
+            this.ctx.strokeStyle = "white"
+            this.ctx.setLineDash([5, 15]);
+            this.ctx.lineWidth = 3;
+            this.ctx.moveTo((this.width / 2) - 1, 0);
+            this.ctx.lineTo(this.width / 2, this.height / 2 - 150);
+            this.ctx.stroke();
+
+            this.ctx.moveTo((this.width / 2) - 1, this.height / 2 + 150);
+            this.ctx.lineTo(this.width / 2, this.height);
+            this.ctx.stroke();
         }, this.ctx)
     }
 
@@ -94,34 +107,45 @@ export default class Board {
 
 
     protected resolveCollisions() {
-        const playerBounds = this.player.getBounds()
-        const opponentBounds = this.opponent.getBounds()
+        let playerBounds = this.player.getBounds()
+        let opponentBounds = this.opponent.getBounds()
 
 
-        const playersCollisionWithBounds = this.boardBounds.getBoxCollision({pointA: playerBounds.box.tr, pointB:playerBounds.box.bl})
+        const playersCollisionWithBounds = this.boardBounds.getBoxCollision({pointA: playerBounds.box.tr, pointB:playerBounds.box.br})
         if (playersCollisionWithBounds) {
-
             playersCollisionWithBounds.side === SIDE.TOP? this.player.moveToVerticalPosition(0) :   this.player.moveToVerticalPosition(this.height, false)
+            playerBounds = this.player.getBounds()
         }
 
+        const opponentCollisionWithBound = this.boardBounds.getBoxCollision({pointA: opponentBounds.box.tr, pointB:opponentBounds.box.br})
+        if (opponentCollisionWithBound) {
+            opponentCollisionWithBound.side === SIDE.TOP? this.opponent.moveToVerticalPosition(0) :   this.opponent.moveToVerticalPosition(this.height, false)
+            opponentBounds = this.opponent.getBounds()
 
-        const ballTraveledCollisionLine = this.ball.getTraveledCollisionLine()
+        }
+
+        let ballTraveledCollisionLine = this.ball.getTraveledCollisionLine()
         if(!ballTraveledCollisionLine){
             return
         }
-
         const collisionWithPlayer = playerBounds.getBoxCollision(ballTraveledCollisionLine)
-        if (collisionWithPlayer) {
-            this.ball.setPosition(collisionWithPlayer.collisionPoint)
+        if (collisionWithPlayer && collisionWithPlayer.side === SIDE.RIGHT) {
+            const newPosition = collisionWithPlayer.collisionPoint
+            newPosition.x+=this.ball.radius
+            this.ball.setPosition(newPosition)
             this.ball.setDirection(playerBounds.getSideNormal(collisionWithPlayer.side)
                 .rotate(this.player.getNormalRotationAtPoint(collisionWithPlayer.collisionPoint)))
+            ballTraveledCollisionLine = this.ball.getTraveledCollisionLine()
         }
 
         const collisionWithOpponent = opponentBounds.getBoxCollision(ballTraveledCollisionLine)
-        if (collisionWithOpponent) {
-            this.ball.setPosition(collisionWithOpponent.collisionPoint)
+        if (collisionWithOpponent && collisionWithOpponent.side === SIDE.LEFT) {
+            const newPosition = collisionWithOpponent.collisionPoint
+            newPosition.x-=this.ball.radius
+            this.ball.setPosition(newPosition)
             this.ball.setDirection(opponentBounds.getSideNormal(collisionWithOpponent.side)
                 .rotate(this.opponent.getNormalRotationAtPoint(collisionWithOpponent.collisionPoint)))
+            ballTraveledCollisionLine = this.ball.getTraveledCollisionLine()
         }
 
         const collisionWithBounds = this.boardBounds.getBoxCollision(ballTraveledCollisionLine)
@@ -137,7 +161,6 @@ export default class Board {
              this.ball.bounce(collisionWithBounds.collisionPoint, this.boardBounds.getSideNormal(collisionWithBounds.side))
         }
 
-
     }
 
 
@@ -145,10 +168,14 @@ export default class Board {
         isLeftWall ? this.score.opponent++ : this.score.player++
         this.ball.stopAndHide()
         setTimeout(() => {
-            this.ball.start({
+            const startingPlayer = isLeftWall ? this.opponent : this.player
+            const center = {
                 x: this.width / 2,
                 y: this.height / 2
-            }, new Vector(isLeftWall ? 1 : -1, 0))
+            }
+            const paddleCenter = startingPlayer.getCenter()
+            const centerVector = new Vector(paddleCenter.x - center.x, paddleCenter.y - center.y)
+            this.ball.start(center, centerVector.unit())
         }, 500)
 
         this.convertScoreToParticles()
@@ -157,30 +184,39 @@ export default class Board {
     protected update() {
         const state = this.actor.getSnapshot()
         this.movePlayer(state)
-        this.ball.update()
+        this.moveOpponent(state)
+        this.ball.update(state.context.elapsedTimeMs)
         this.resolveCollisions()
         CollisionEffect.use(this.scoreParticles, {
             x: this.ball.position.x,
             y: this.ball.position.y,
-            radius: this.ball.radius * 5
+            radius: this.ball.radius * 2
         })
         this.scoreParticles.forEach(particle => particle.update())
     }
 
 
+    protected moveOpponent(state: SnapshotFrom<typeof gamesState>){
+        const paddleCenter = this.opponent.getCenter()
+        const distance = paddleCenter.y - this.ball.position.y
+
+
+        if(Math.abs(distance) < 30 || Math.random() < OPPONENT_IDLE_INCORRECTNESS) {
+            return
+        }
+
+
+        if( Math.sign(distance)  < 0 ) {
+            this.opponent.moveDown(state.context.elapsedTimeMs)
+        } else {
+            this.opponent.moveUp(state.context.elapsedTimeMs)
+        }
+
+    }
+
     public render() {
         this.update()
-        this.ctx.beginPath();
-        this.ctx.strokeStyle = "white"
-        this.ctx.setLineDash([5, 15]);
-        this.ctx.lineWidth = 3;
-        this.ctx.moveTo((this.width / 2) - 1, 0);
-        this.ctx.lineTo(this.width / 2, this.height / 2 - 100);
-        this.ctx.stroke();
 
-        this.ctx.moveTo((this.width / 2) - 1, this.height / 2 + 150);
-        this.ctx.lineTo(this.width / 2, this.height);
-        this.ctx.stroke();
         this.player.render()
         this.opponent.render()
         this.scoreParticles.map(particle => particle.draw())

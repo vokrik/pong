@@ -2,15 +2,15 @@ import type {Point} from "./Point";
 import {Vector} from "vector2d";
 import {Bounds, BOUNDS_TYPE} from "./Bounds";
 
-const MOVEMENT_SPEED = 0.005
+const MOVEMENT_SPEED = 0.008
 const MAX_PADDLE_ANGLE = 0.9
 export default class Paddle {
     private ctx: CanvasRenderingContext2D
 
     private position: Point
     private facingDirection: Vector
-    private width: number
-    private height: number
+    public width: number
+    public height: number
     private speed: number
 
     constructor(startingPosition: Point, facingDirection: Vector, width: number, height: number, ctx: CanvasRenderingContext2D) {
@@ -40,6 +40,12 @@ export default class Paddle {
         }, BOUNDS_TYPE.OUTER)
     }
 
+    public getCenter(): Point {
+        return {
+            x: this.position.x + this.width / 2,
+            y: this.position.y + this.height / 2
+        }
+    }
     public getNormalRotationAtPoint(point: Point) {
         const halfPaddleHeight = this.height / 2
         const paddleCenterY = this.position.y +  halfPaddleHeight
@@ -66,12 +72,6 @@ export default class Paddle {
              this.ctx.lineTo(pointB.x, pointB.y);
              this.ctx.stroke();
         }
-        // const boundingBox = this. getBoundingBox()
-        // for(let i = boundingBox.tr.y; i <= boundingBox.br.y; i = i + 5) {
-        //     const normal = this.getNormalAtPoint({x: boundingBox.tr.x, y: i})
-        //     normal.multiplyByScalar(130)
-        //     drawLine({x: boundingBox.tr.x, y: i}, {x: boundingBox.tr.x + normal.x , y: i + normal.y})
-        // }
 
     }
 }

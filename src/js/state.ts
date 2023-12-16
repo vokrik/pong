@@ -1,6 +1,6 @@
 import {assign, createMachine} from "xstate";
 
-const MAX_ELAPSED_TIME_MS = 20
+const MAX_ELAPSED_TIME_MS = 50
 export const gamesState = createMachine(
     {
         id: "Game state",

@@ -22,15 +22,15 @@ export default class TitleScreen {
         this.width = width
         this.height = height
         this.ctx = ctx
-        this.particles = CanvasAnalyzer.convertCanvasToParticles(this.width, this.height, 4, () => {
+        this.particles = CanvasAnalyzer.convertCanvasToParticles(this.width, this.height, 3, () => {
             this.ctx.fillStyle = "white"
-            this.ctx.font = `190px VT323`
+            this.ctx.font = `120px Silkscreen`
             this.ctx.textAlign = "center"
             this.ctx.textBaseline = "middle"
             this.ctx.clearRect(0, 0, width, height)
             this.ctx.fillText("Particle Pong", this.width / 2, this.height / 2)
 
-            this.ctx.font = `50px VT323`
+            this.ctx.font = `30px Silkscreen`
             this.ctx.fillText("*Press Enter to start*", this.width / 2, this.height / 2 + 150)
         }, this.ctx)
         this.bounds = new Bounds({
@@ -45,7 +45,7 @@ export default class TitleScreen {
     }
 
     private update() {
-        this.ball.update()
+        this.ball.update(0.15)
         const ballTraveledCollisionLine = this.ball.getTraveledCollisionLine()
 
         const collisionWithBounds = this.bounds.getBoxCollision(ballTraveledCollisionLine)

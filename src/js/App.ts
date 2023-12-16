@@ -22,7 +22,10 @@ class App {
 }
 
 window.onload = () => {
-    let app = new App(new Pong());
+    document.fonts.ready.then(function() {
+        let app = new App(new Pong());
 
-    app.setup();
+        app.setup();
+    });
+
 }
