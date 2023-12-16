@@ -1,7 +1,7 @@
 import Paddle from "./Paddle";
 import {Actor, SnapshotFrom} from "xstate";
 import {gamesState} from "./state";
-import Ball from "./Ball";
+import Ball, {BALL_RADIUS_PERCENT} from "./Ball";
 import {Vector} from "vector2d";
 import {Point} from "./Point";
 import CollisionEffect from "./CollisionEffect";
@@ -12,7 +12,6 @@ import {Bounds, BOUNDS_TYPE, SIDE} from "./Bounds";
 const PADDLE_WIDTH_PERCENT = 0.01
 const PADDLE_HEIGHT_PERCENT = 0.3
 const PADDLE_DISTANCE_FROM_SIDE_PERCENT = 0.1
-const BALL_RADIUS_PERCENT = 0.015
 
 
 export default class Board {
@@ -158,7 +157,7 @@ export default class Board {
     protected update() {
         const state = this.actor.getSnapshot()
         this.movePlayer(state)
-        this.ball.move()
+        this.ball.update()
         this.resolveCollisions()
         CollisionEffect.use(this.scoreParticles, {
             x: this.ball.position.x,

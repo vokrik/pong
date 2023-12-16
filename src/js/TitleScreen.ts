@@ -1,6 +1,9 @@
 import CollisionEffect from "./CollisionEffect";
 import CanvasAnalyzer from "./CanvasAnalyzer";
 import Particle from "./Particle";
+import Ball, {BALL_RADIUS_PERCENT} from "./Ball";
+import {Vector} from "vector2d";
+import {Bounds, BOUNDS_TYPE, SIDE} from "./Bounds";
 
 type Mouse = {
     x?: number,
@@ -12,18 +15,16 @@ export default class TitleScreen {
     private width: number
     private height: number
     private particles: Array<Particle>
-    private mouse: Mouse = {
-        x: undefined,
-        y: undefined
-    }
+    private ball
+    private bounds
 
     constructor(width: number, height: number, ctx: CanvasRenderingContext2D) {
         this.width = width
         this.height = height
         this.ctx = ctx
-        this.particles = CanvasAnalyzer.convertCanvasToParticles(this.width, this.height, 2, () => {
+        this.particles = CanvasAnalyzer.convertCanvasToParticles(this.width, this.height, 4, () => {
             this.ctx.fillStyle = "white"
-            this.ctx.font = `140px VT323`
+            this.ctx.font = `190px VT323`
             this.ctx.textAlign = "center"
             this.ctx.textBaseline = "middle"
             this.ctx.clearRect(0, 0, width, height)
@@ -32,37 +33,41 @@ export default class TitleScreen {
             this.ctx.font = `50px VT323`
             this.ctx.fillText("*Press Enter to start*", this.width / 2, this.height / 2 + 150)
         }, this.ctx)
+        this.bounds = new Bounds({
+            tl: {x: 0, y: 0},
+            tr: {x: width, y: 0},
+            bl: {x: 0, y: height},
+            br: {x: width, y: height},
+        }, BOUNDS_TYPE.INNER)
 
-
-        document.addEventListener('mousemove', (e) => {
-            this.mouse = {
-                x: e.x,
-                y: e.y
-            }
-        })
+        this.ball = new Ball(Math.min(height * BALL_RADIUS_PERCENT, width * BALL_RADIUS_PERCENT), ctx)
+        this.ball.start({x: this.width/2, y: this.height/2}, (new Vector(1, 0)).rotate(Math.PI/3))
     }
 
     private update() {
+        this.ball.update()
+        const ballTraveledCollisionLine = this.ball.getTraveledCollisionLine()
+
+        const collisionWithBounds = this.bounds.getBoxCollision(ballTraveledCollisionLine)
+
+
+        if (collisionWithBounds) {
+            this.ball.bounce(collisionWithBounds.collisionPoint, this.bounds.getSideNormal(collisionWithBounds.side))
+        }
+
+
         CollisionEffect.use(this.particles, {
-            x: this.mouse.x,
-            y: this.mouse.y,
-            radius: 40
+            x: this.ball.position.x,
+            y: this.ball.position.y,
+            radius: this.ball.radius * 3
         })
         this.particles.forEach(particle => particle.update())
     }
 
     render() {
         this.update()
-        this.ctx.strokeStyle = "red"
-        this.ctx.beginPath()
-        this.ctx.moveTo(this.width / 2, 0)
-        this.ctx.lineTo(this.width / 2, this.height)
-        this.ctx.stroke()
-        this.ctx.beginPath()
-        this.ctx.moveTo(0, this.height / 2)
-        this.ctx.lineTo(this.width, this.height / 2)
-        this.ctx.stroke()
         this.particles.map(particle => particle.draw())
+        this.ball.render()
     }
 }
 

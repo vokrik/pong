@@ -3,7 +3,8 @@ import {AbstractVector, Vector} from "vector2d";
 import {BoundingBox} from "./BoundingBox";
 
 
-const DEFAULT_SPEED_MULTIPLIER = 3
+const DEFAULT_SPEED_MULTIPLIER = 2
+export const BALL_RADIUS_PERCENT = 0.015
 
 export default class Ball {
     private ctx: CanvasRenderingContext2D
@@ -50,7 +51,7 @@ export default class Ball {
         }
     }
 
-    public move() {
+    public update() {
         if(!this.isActive) {
             return
         }
@@ -88,12 +89,6 @@ export default class Ball {
         this.ctx.fillStyle = "white"
         this.ctx.beginPath()
         this.ctx.arc(this.position.x, this.position.y, this.radius, 0, 2* Math.PI)
-        this.ctx.fill()
-
-        this.ctx.fillStyle = "red"
-        this.ctx.beginPath()
-        const collisionPoint = this.getDirectionalOuterPoint(this.position)
-        this.ctx.arc(collisionPoint.x, collisionPoint.y, this.radius/10, 0, 2* Math.PI)
         this.ctx.fill()
 
     }
