@@ -4,6 +4,8 @@ import Particle from "./Particle";
 import Ball, {BALL_RADIUS_PERCENT} from "./Ball";
 import {Vector} from "vector2d";
 import {Bounds, BOUNDS_TYPE, SIDE} from "./Bounds";
+import {Actor} from "xstate";
+import {gamesState} from "./state";
 
 type Mouse = {
     x?: number,
@@ -17,12 +19,14 @@ export default class TitleScreen {
     private particles: Array<Particle>
     private ball
     private bounds
+    private actor
 
-    constructor(width: number, height: number, ctx: CanvasRenderingContext2D) {
+    constructor(width: number, height: number,actor: Actor<typeof gamesState>, ctx: CanvasRenderingContext2D) {
         this.width = width
         this.height = height
         this.ctx = ctx
-        this.particles = CanvasAnalyzer.convertCanvasToParticles(this.width, this.height, 3, () => {
+        this.actor = actor
+        this.particles = CanvasAnalyzer.convertCanvasToParticles(this.width, this.height, 4, () => {
             this.ctx.fillStyle = "white"
             this.ctx.font = `120px Silkscreen`
             this.ctx.textAlign = "center"
@@ -45,7 +49,7 @@ export default class TitleScreen {
     }
 
     private update() {
-        this.ball.update(0.15)
+        this.ball.update(this.actor.getSnapshot().context.elapsedTimeMs)
         const ballTraveledCollisionLine = this.ball.getTraveledCollisionLine()
 
         const collisionWithBounds = this.bounds.getBoxCollision(ballTraveledCollisionLine)
@@ -66,6 +70,8 @@ export default class TitleScreen {
 
     render() {
         this.update()
+        this.ctx.fillStyle = "black"
+        this.ctx.fillRect(0, 0, this.width, this.height)
         this.particles.map(particle => particle.draw())
         this.ball.render()
     }

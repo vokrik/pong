@@ -3,7 +3,7 @@ import {AbstractVector, Vector} from "vector2d";
 import {BoundingBox} from "./BoundingBox";
 
 
-const DEFAULT_SPEED_MULTIPLIER = 0.05
+const DEFAULT_SPEED_MULTIPLIER = 0.08
 export const BALL_RADIUS_PERCENT = 0.015
 
 export default class Ball {
@@ -74,7 +74,7 @@ export default class Ball {
         }
         this.position = {
             x: collisionPoint.x - this.direction.x * this.radius,
-            y: collisionPoint.y - this.direction.y* this.radius
+            y: collisionPoint.y - this.direction.y * this.radius
         }
         const d = 2 * surfaceNormal.dot(this.direction);
 

@@ -9,12 +9,12 @@ import CanvasAnalyzer from "./CanvasAnalyzer";
 import Particle from "./Particle";
 import {Bounds, BOUNDS_TYPE, SIDE} from "./Bounds";
 
-const PADDLE_WIDTH_PERCENT = 0.023
+const PADDLE_WIDTH_PERCENT = 0.018
 const PADDLE_HEIGHT_PERCENT = 0.2
 const PADDLE_DISTANCE_FROM_SIDE_PERCENT = 0.1
-const OPPONENT_IDLE_INCORRECTNESS = 0.4
+const OPPONENT_IDLE_INCORRECTNESS = 0.6
 
-export default class Board {
+export default class Game {
 
     private score = {
         player: 0,
@@ -216,6 +216,8 @@ export default class Board {
 
     public render() {
         this.update()
+        this.ctx.fillStyle = "black"
+        this.ctx.fillRect(0, 0, this.width, this.height)
 
         this.player.render()
         this.opponent.render()
