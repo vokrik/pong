@@ -18,7 +18,7 @@ module.exports = {
                 test: /\.ts?$/,
                 exclude: /node_modules/,
                 use: [
-                    { loader: "ts-loader" }
+                    {loader: "ts-loader"}
                 ]
             },
             {
@@ -29,13 +29,6 @@ module.exports = {
                     "css-loader"
                 ]
             },
-            {
-                test: /\.mp3$/,
-                exclude: /node_modules/,
-                use: [
-                    { loader: 'file-loader' }
-                ]
-            }
         ]
     },
     plugins: [

@@ -1,6 +1,8 @@
 import {gamesState} from "./state"
 import {Actor, createActor} from "xstate";
 import Board from "./Board";
+import Effect from "./Effect";
+import TitleScreen from "./TitleScreen";
 
 
 export default class Pong {
@@ -9,6 +11,7 @@ export default class Pong {
     private height: number = window.innerHeight;
     private width: number = window.innerWidth;
     private board: Board
+    private titleScreen: TitleScreen
     private actor: Actor<typeof gamesState>
 
     constructor() {
@@ -18,6 +21,7 @@ export default class Pong {
         this.ctx = this.canvas.getContext("2d");
         this.actor = createActor(gamesState).start();
         this.board = new Board(this.width, this.height, this.actor, this.ctx)
+        this.titleScreen = new TitleScreen(this.width, this.height,this.ctx)
     }
 
     public setup(): void {
@@ -57,8 +61,12 @@ export default class Pong {
 
     public render(): void {
         this.actor.send({type: "Tick"})
+        this.ctx.clearRect(0, 0, this.width, this.height);
+        this.ctx.fillStyle = "black"
+        this.ctx.fillRect(0, 0, this.width, this.height)
         const state = this.actor.getSnapshot()
         if (state.matches("Display menu")) {
+            this.titleScreen.render()
         } else {
             this.board.render()
         }

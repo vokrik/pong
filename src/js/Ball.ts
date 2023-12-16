@@ -8,7 +8,7 @@ const DEFAULT_SPEED_MULTIPLIER = 0.15
 export default class Ball {
     private ctx: CanvasRenderingContext2D
 
-    private position: Point
+    public position: Point
     private previousPosition: Point
     private direction: AbstractVector
     private speed: number
@@ -54,16 +54,22 @@ export default class Ball {
         }
     }
 
-
+    public setPosition(position: Point){
+        this.position = position
+    }
+    public setDirection(direction: Vector) {
+        this.direction = direction
+    }
     public bounce(collisionPoint: Point, surfaceNormal: Vector) {
         this.position = {
             x: collisionPoint.x - this.direction.x * this.radius,
             y: collisionPoint.y - this.direction.y* this.radius
         }
         const d = 2 * surfaceNormal.dot(this.direction);
-        this.direction.x -= d * surfaceNormal.x;          // update vectors reflected by
-        this.direction.y -= d * surfaceNormal.y;          // normal using product d
-        
+
+       this.direction.x = this.direction.x - d * surfaceNormal.x;
+       this.direction.y = this.direction.y - d * surfaceNormal.y
+
     }
     public render(): void {
         this.ctx.fillStyle = "white"
