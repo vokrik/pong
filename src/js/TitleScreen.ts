@@ -21,13 +21,16 @@ export default class TitleScreen {
         this.width = width
         this.height = height
         this.ctx = ctx
-        this.particles = CanvasAnalyzer.convertCanvasToParticles(this.width, this.height, 3, () => {
+        this.particles = CanvasAnalyzer.convertCanvasToParticles(this.width, this.height, 2, () => {
             this.ctx.fillStyle = "white"
-            this.ctx.font = `120px Helvetica`
+            this.ctx.font = `140px VT323`
             this.ctx.textAlign = "center"
             this.ctx.textBaseline = "middle"
             this.ctx.clearRect(0, 0, width, height)
-            this.ctx.fillText("Hello world", this.width / 2, this.height / 2)
+            this.ctx.fillText("Particle Pong", this.width / 2, this.height / 2)
+
+            this.ctx.font = `50px VT323`
+            this.ctx.fillText("*Press Enter to start*", this.width / 2, this.height / 2 + 150)
         }, this.ctx)
 
 

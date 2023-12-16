@@ -6,3 +6,8 @@ export type BoundingBox ={
     bl: Point,
     br: Point
 }
+
+export type Line = {
+    pointA: Point
+    pointB: Point
+}

@@ -3,21 +3,18 @@ import {Actor, SnapshotFrom} from "xstate";
 import {gamesState} from "./state";
 import Ball from "./Ball";
 import {Vector} from "vector2d";
-import {BoundingBox} from "./BoundingBox";
 import {Point} from "./Point";
 import CollisionEffect from "./CollisionEffect";
 import CanvasAnalyzer from "./CanvasAnalyzer";
 import Particle from "./Particle";
+import {Bounds, BOUNDS_TYPE, SIDE} from "./Bounds";
 
 const PADDLE_WIDTH_PERCENT = 0.01
 const PADDLE_HEIGHT_PERCENT = 0.3
 const PADDLE_DISTANCE_FROM_SIDE_PERCENT = 0.1
 const BALL_RADIUS_PERCENT = 0.015
 
-type LineBy2Points = {
-    pointA: Point
-    pointB: Point
-}
+
 export default class Board {
 
     private score = {
@@ -31,6 +28,7 @@ export default class Board {
     private ball: Ball
     private width: number
     private height: number
+    private boardBounds
     private actor: Actor<typeof gamesState>
 
 
@@ -39,6 +37,13 @@ export default class Board {
         this.width = width
         this.height = height
         this.actor = actor
+        this.boardBounds = new Bounds({
+            tl: {x: 0, y: 0},
+            tr: {x: width, y: 0},
+            bl: {x: 0, y: height},
+            br: {x: width, y: height},
+        }, BOUNDS_TYPE.INNER)
+
 
         const paddleWidth = this.width * PADDLE_WIDTH_PERCENT
         const paddleHeight = this.height * PADDLE_HEIGHT_PERCENT
@@ -58,10 +63,11 @@ export default class Board {
             this.ctx
         )
 
-        this.ball = new Ball({
+        this.ball = new Ball(Math.min(height * BALL_RADIUS_PERCENT, width * BALL_RADIUS_PERCENT), this.ctx)
+        this.ball.start({
             x: width / 2,
             y: height / 2
-        }, new Vector(-10, 0), Math.min(height * BALL_RADIUS_PERCENT, width * BALL_RADIUS_PERCENT), this.ctx)
+        }, new Vector(-10, 0))
         this.convertScoreToParticles()
 
     }
@@ -76,6 +82,7 @@ export default class Board {
             this.ctx.fillText(`${this.score.player} : ${this.score.opponent}`, this.width / 2, this.height / 2)
         }, this.ctx)
     }
+
     private movePlayer(state: SnapshotFrom<typeof gamesState>) {
         if (state.matches({"Play game": {Player: "Moving up"}})) {
             this.player.moveUp(state.context.elapsedTimeMs)
@@ -88,109 +95,74 @@ export default class Board {
 
 
     protected resolveCollisions() {
-        const playerBounds = this.player.getBoundingBox()
-        const opponentBounds = this.opponent.getBoundingBox()
-        const ballBounds = this.ball.getBoundingBox()
+        const playerBounds = this.player.getBounds()
+        const opponentBounds = this.opponent.getBounds()
 
-        if (playerBounds.tl.y <= 0) {
-            this.player.moveToVerticalPosition(0)
-        }
-        if (playerBounds.bl.y >= this.height) {
-            this.player.moveToVerticalPosition(this.height, false)
-        }
 
-        const collisionPointWithPlayer = this.intersectionOf2Lines({pointA: playerBounds.tr, pointB: playerBounds.br}, this.ball.getTraveledCollisionLine() )
-        if(collisionPointWithPlayer){
-            this.ball.setPosition(collisionPointWithPlayer)
-            this.ball.setDirection(this.player.getNormalAtPoint(collisionPointWithPlayer))
-        }
-        const collisionPointWithOpponent = this.intersectionOf2Lines({pointA: opponentBounds.tl, pointB: opponentBounds.bl}, this.ball.getTraveledCollisionLine() )
-        if(collisionPointWithOpponent){
-            this.ball.setPosition(collisionPointWithOpponent)
-            this.ball.setDirection(this.opponent.getNormalAtPoint(collisionPointWithOpponent))        }
+        const playersCollisionWithBounds = this.boardBounds.getBoxCollision({pointA: playerBounds.box.tr, pointB:playerBounds.box.bl})
+        if (playersCollisionWithBounds) {
 
-        const collisionPointWithTopWall = this.intersectionOf2Lines({pointA: {x: 0, y: 0}, pointB: {x: this.width, y:0}}, this.ball.getTraveledCollisionLine() )
-        if(collisionPointWithTopWall){
-            this.ball.bounce(collisionPointWithTopWall, new Vector(0, 1))
+            playersCollisionWithBounds.side === SIDE.TOP? this.player.moveToVerticalPosition(0) :   this.player.moveToVerticalPosition(this.height, false)
         }
 
-        const collisionPointWithBottomWall = this.intersectionOf2Lines({pointA: {x: 0, y: this.height}, pointB: {x: this.width, y:this.height}}, this.ball.getTraveledCollisionLine() )
-        if(collisionPointWithBottomWall){
-            this.ball.bounce(collisionPointWithBottomWall, new Vector(0, -1) )
+
+        const ballTraveledCollisionLine = this.ball.getTraveledCollisionLine()
+        if(!ballTraveledCollisionLine){
+            return
         }
 
-        const collisionPointLeftWall = this.intersectionOf2Lines({pointA: {x: 0, y: 0}, pointB: {x: 0, y:this.height}}, this.ball.getTraveledCollisionLine() )
-        if(collisionPointLeftWall){
-            this.ball.bounce(collisionPointLeftWall, new Vector(1, 0) )
-            this.resolveSideWallHit(collisionPointLeftWall, true)
+        const collisionWithPlayer = playerBounds.getBoxCollision(ballTraveledCollisionLine)
+        if (collisionWithPlayer) {
+            this.ball.setPosition(collisionWithPlayer.collisionPoint)
+            this.ball.setDirection(playerBounds.getSideNormal(collisionWithPlayer.side)
+                .rotate(this.player.getNormalRotationAtPoint(collisionWithPlayer.collisionPoint)))
         }
-        const collisionPointRightWall = this.intersectionOf2Lines({pointA: {x: this.width, y: 0}, pointB: {x: this.width, y:this.height}}, this.ball.getTraveledCollisionLine() )
-        if(collisionPointRightWall){
-            this.ball.bounce(collisionPointRightWall, new Vector(-1, 0) )
-            this.resolveSideWallHit(collisionPointRightWall, false)
 
+        const collisionWithOpponent = opponentBounds.getBoxCollision(ballTraveledCollisionLine)
+        if (collisionWithOpponent) {
+            this.ball.setPosition(collisionWithOpponent.collisionPoint)
+            this.ball.setDirection(opponentBounds.getSideNormal(collisionWithOpponent.side)
+                .rotate(this.opponent.getNormalRotationAtPoint(collisionWithOpponent.collisionPoint)))
         }
+
+        const collisionWithBounds = this.boardBounds.getBoxCollision(ballTraveledCollisionLine)
+
+        if(!collisionWithBounds) {
+            return
+        }
+
+        if ([SIDE.LEFT, SIDE.RIGHT].includes(collisionWithBounds.side) ) {
+            this.resolveSideWallHit(collisionWithBounds.collisionPoint, collisionWithBounds.side === SIDE.LEFT)
+        }
+         else {
+             this.ball.bounce(collisionWithBounds.collisionPoint, this.boardBounds.getSideNormal(collisionWithBounds.side))
+        }
+
+
     }
 
-    protected intersectionOf2Lines(lineA: LineBy2Points, lineB: LineBy2Points) {
-        
-        if ((lineA.pointA.x === lineA.pointB.x && lineA.pointA.y === lineA.pointB.y) || (lineB.pointA.x === lineB.pointB.x && lineB.pointA.y === lineB.pointB.y)) {
-            return null
-        }
 
-        const denominator = ((lineB.pointB.y - lineB.pointA.y) * (lineA.pointB.x - lineA.pointA.x) - (lineB.pointB.x - lineB.pointA.x) * (lineA.pointB.y - lineA.pointA.y))
+    protected resolveSideWallHit(collisionPoint: Point, isLeftWall: boolean) {
+        isLeftWall ? this.score.opponent++ : this.score.player++
+        this.ball.stopAndHide()
+        setTimeout(() => {
+            this.ball.start({
+                x: this.width / 2,
+                y: this.height / 2
+            }, new Vector(isLeftWall ? 1 : -1, 0))
+        }, 500)
 
-        // Lines are parallel
-        if (denominator === 0) {
-            return null
-        }
-
-        let ua = ((lineB.pointB.x - lineB.pointA.x) * (lineA.pointA.y - lineB.pointA.y) - (lineB.pointB.y - lineB.pointA.y) * (lineA.pointA.x - lineB.pointA.x)) / denominator
-        let ub = ((lineA.pointB.x - lineA.pointA.x) * (lineA.pointA.y - lineB.pointA.y) - (lineA.pointB.y - lineA.pointA.y) * (lineA.pointA.x - lineB.pointA.x)) / denominator
-
-        // is the intersection along the segments
-        if (ua < 0 || ua > 1 || ub < 0 || ub > 1) {
-            return null
-        }
-
-        let x = lineA.pointA.x + ua * (lineA.pointB.x - lineA.pointA.x)
-        let y = lineA.pointA.y + ua * (lineA.pointB.y - lineA.pointA.y)
-
-        return {x, y}
-    }
-
-    protected areBondingBoxesIntersecting(first: BoundingBox, second: BoundingBox ) {
-        const firstMinX = Math.min(first.tl.x, first.bl.x)
-        const firstMinY = Math.min(first.tl.y, first.bl.y)
-        const firstMaxX = Math.max(first.tr.x, first.br.x)
-        const firstMaxY = Math.max(first.tr.y, first.br.y)
-
-        const secondMinX = Math.min(second.tl.x, second.bl.x)
-        const secondMinY = Math.min(second.tl.y, second.bl.y)
-        const secondMaxX = Math.max(second.tr.x, second.br.x)
-        const secondMaxY = Math.max(second.tr.y, second.br.y)
-
-        const firstLeftOfSecond = firstMaxX < secondMinX
-        const firstRightOfSecond = firstMinX > secondMaxX
-        const firstAboveSecond = firstMinY > secondMaxY
-        const firstBelowSecond = firstMaxY < secondMinY
-
-        return !(firstLeftOfSecond || firstRightOfSecond || firstAboveSecond || firstBelowSecond)
-
-    }
-    protected resolveSideWallHit(collisionPoint: Point, isLeftWall: boolean){
-       isLeftWall ? this.score.opponent++ : this.score.player++
         this.convertScoreToParticles()
     }
+
     protected update() {
         const state = this.actor.getSnapshot()
         this.movePlayer(state)
-        this.ball.move(state.context.elapsedTimeMs)
+        this.ball.move()
         this.resolveCollisions()
-
         CollisionEffect.use(this.scoreParticles, {
             x: this.ball.position.x,
-            y:this.ball.position.y,
+            y: this.ball.position.y,
             radius: this.ball.radius * 5
         })
         this.scoreParticles.forEach(particle => particle.update())
@@ -202,10 +174,13 @@ export default class Board {
         this.ctx.beginPath();
         this.ctx.strokeStyle = "white"
         this.ctx.setLineDash([5, 15]);
-        this.ctx.moveTo((this.width / 2) - 1, 0);
         this.ctx.lineWidth = 3;
+        this.ctx.moveTo((this.width / 2) - 1, 0);
+        this.ctx.lineTo(this.width / 2, this.height / 2 - 100);
+        this.ctx.stroke();
 
-        this.ctx.lineTo(this.width / 2 , this.height);
+        this.ctx.moveTo((this.width / 2) - 1, this.height / 2 + 150);
+        this.ctx.lineTo(this.width / 2, this.height);
         this.ctx.stroke();
         this.player.render()
         this.opponent.render()

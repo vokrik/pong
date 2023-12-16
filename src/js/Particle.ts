@@ -26,7 +26,7 @@ export default class Particle {
         this.vy = 0
 
         this.ease = 0.09
-        this.friction = Math.random() * 0.1 + 0.4
+        this.friction = Math.random() * 0.1 + 0.6
     }
 
     public setVelocity(vx: number, vy: number) {
