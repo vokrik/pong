@@ -1,7 +1,7 @@
 import {gamesState} from "./state"
 import {Actor, createActor} from "xstate";
 import Board from "./Board";
-import Effect from "./Effect";
+import Effect from "./CanvasAnalyzer";
 import TitleScreen from "./TitleScreen";
 
 

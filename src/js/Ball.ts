@@ -12,7 +12,7 @@ export default class Ball {
     private previousPosition: Point
     private direction: AbstractVector
     private speed: number
-    private radius: number
+    public radius: number
 
     constructor(startingPosition: Point, direction: Vector, radius: number,  ctx: CanvasRenderingContext2D) {
         this.ctx = ctx
