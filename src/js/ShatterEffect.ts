@@ -1,15 +1,16 @@
 import Particle from "./Particle";
 import {SIDE} from "./Bounds";
 
-export default class HorizontalWallShatter {
+const GRAVITY = 1
+export default class ShatterEffect {
 
 
     static use(width: number, height: number, particles: Array<Particle>) {
         particles.map(particle => {
+            const vx = particle.vx
+            const vy = particle.vy + GRAVITY
 
-            const dx = 0 - particle.x
-
-            particle.setVelocity(dx, 0)
+            particle.setVelocity(vx, vy)
         })
     }
 }

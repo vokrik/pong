@@ -1,4 +1,5 @@
 import Particle from "./Particle";
+
 type CollisionPoint = {
     x?: number,
     y?: number
@@ -14,14 +15,19 @@ export default class CollisionEffect {
 
             const distance = Math.sqrt(dx * dx + dy * dy)
 
-            const force = (-collisionPoint.radius / distance ) * 10
+            if (distance < collisionPoint.radius * 3) {
+                const computedForce = (-collisionPoint.radius / distance) * 10
+                const force = Math.sign(computedForce)* Math.min(Math.abs(computedForce), 50)
 
-            if(distance < collisionPoint.radius) {
                 const angle = Math.atan2(dy, dx)
-                const vx = Math.max(Math.min(force * Math.cos(angle), 400), -400)
-                const vy = Math.max(Math.min(force * Math.sin(angle), 400), -400)
+                const vx = force * Math.cos(angle)
+                const vy = force * Math.sin(angle)
+
                 particle.setVelocity(vx, vy)
             }
+
+            particle.vx = particle.vx * particle.friction + (particle.targetPositionX - particle.x) * particle.ease
+            particle.vy = particle.vy * particle.friction + (particle.targetPositionY - particle.y) * particle.ease
         })
     }
 }

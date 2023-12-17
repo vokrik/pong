@@ -3,21 +3,20 @@ import {AbstractVector, Vector} from "vector2d";
 import {BoundingBox} from "./BoundingBox";
 
 
-const DEFAULT_SPEED_MULTIPLIER = 0.08
 export const BALL_RADIUS_PERCENT = 0.015
 
 export default class Ball {
     private ctx: CanvasRenderingContext2D
     public position?: Point
     private previousPosition?: Point
-    private direction?: AbstractVector
-    private speed: number
+    public direction?: AbstractVector
+    public speed: number
     public radius: number
     public isActive: boolean
-    constructor(radius: number,  ctx: CanvasRenderingContext2D) {
+    constructor(radius: number, speed: number,  ctx: CanvasRenderingContext2D) {
         this.ctx = ctx
         this.radius = radius
-        this.speed = DEFAULT_SPEED_MULTIPLIER * radius
+        this.speed = speed * radius
         this.isActive = false
     }
 

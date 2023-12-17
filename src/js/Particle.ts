@@ -1,15 +1,16 @@
 
+const SPEED_MULTIPLIER = 0.07
 export default class Particle {
     private ctx: CanvasRenderingContext2D
     public x: number
     public y: number
-    private targetPositionX: number
-    private targetPositionY: number
-    private vx: number
-    private vy: number
+    public targetPositionX: number
+    public targetPositionY: number
+    public vx: number
+    public vy: number
 
-    private ease: number
-    private friction: number
+    public ease: number
+    public friction: number
     private color
     private size: number
 
@@ -25,17 +26,17 @@ export default class Particle {
         this.vx = 0
         this.vy = 0
 
-        this.ease = 0.09
-        this.friction = Math.random() * 0.1 + 0.6
+        this.ease = 0.05
+        this.friction = Math.random() * 0.2 + 0.7
     }
 
     public setVelocity(vx: number, vy: number) {
         this.vx = vx
         this.vy = vy
     }
-    public update() {
-        this.x += (this.vx *= this.friction) + (this.targetPositionX - this.x) * this.ease
-        this.y += (this.vy *= this.friction) + (this.targetPositionY - this.y) * this.ease
+    public update(elapsedTimeMs: number) {
+        this.x += this.vx * elapsedTimeMs * SPEED_MULTIPLIER
+        this.y += this.vy * elapsedTimeMs * SPEED_MULTIPLIER
     }
     public draw() {
         this.ctx.fillStyle = this.color
