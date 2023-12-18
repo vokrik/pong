@@ -1,27 +1,25 @@
 import Paddle from "../gameObjects/Paddle";
 import {Actor, SnapshotFrom} from "xstate";
 import {gamesState} from "../state";
-import Ball, {BALL_RADIUS_PERCENT} from "../gameObjects/Ball";
+import Ball from "../gameObjects/Ball";
 import {Vector} from "vector2d";
 import {Point} from "../gameObjects/Point";
 import CollisionEffect from "../effects/CollisionEffect";
 import CanvasAnalyzer from "../CanvasAnalyzer";
 import Particle from "../gameObjects/Particle";
 import {Bounds, BOUNDS_TYPE, SIDE} from "../gameObjects/Bounds";
+import {
+    FONT_SIZE_TITLE_TO_HEIGHT_RATIO, GAME_BALL_SPEED, OPPONENT_IDLE_INCORRECTNESS,
+    PADDLE_DISTANCE_FROM_SIDE_PERCENT,
+    PADDLE_HEIGHT_PERCENT,
+    PADDLE_WIDTH_PERCENT
+} from "../constants";
 
-const PADDLE_WIDTH_PERCENT = 0.018
-const PADDLE_HEIGHT_PERCENT = 0.25
-const PADDLE_DISTANCE_FROM_SIDE_PERCENT = 0.1
-const OPPONENT_IDLE_INCORRECTNESS = 0.8
 
-const BALL_SPEED = 0.07
+
 
 export default class Game {
 
-    // private score = {
-    //     player: 0,
-    //     opponent: 0
-    // }
     private ctx: CanvasRenderingContext2D
     private scoreParticles: Array<Particle>
     private ballParticles: Array<Particle>
@@ -67,7 +65,7 @@ export default class Game {
             this.ctx
         )
 
-        this.ball = new Ball(Math.min(height * BALL_RADIUS_PERCENT, width * BALL_RADIUS_PERCENT),BALL_SPEED, this.ctx)
+        this.ball = new Ball(this.width, this.height ,GAME_BALL_SPEED, this.ctx)
         this.ball.start({
             x: width / 2,
             y: height / 2
@@ -80,8 +78,10 @@ export default class Game {
     private convertScoreToParticles() {
         const score = this.actor.getSnapshot().context.score
         this.scoreParticles = CanvasAnalyzer.convertCanvasToParticles(this.width, this.height, () => {
+            const scoreSize = Math.ceil(this.height * FONT_SIZE_TITLE_TO_HEIGHT_RATIO)
+
             this.ctx.fillStyle = "white"
-            this.ctx.font = `120px Helvetica`
+            this.ctx.font = `${scoreSize}px Silkscreen`
             this.ctx.textAlign = "center"
             this.ctx.textBaseline = "middle"
             this.ctx.clearRect(0, 0, this.width, this.height)

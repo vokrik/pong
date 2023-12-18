@@ -1,9 +1,9 @@
 import type {Point} from "./Point";
 import {AbstractVector, Vector} from "vector2d";
 import {BoundingBox} from "./BoundingBox";
+import {BALL_RADIUS_PERCENT} from "../constants";
 
 
-export const BALL_RADIUS_PERCENT = 0.015
 
 export default class Ball {
     private ctx: CanvasRenderingContext2D
@@ -13,10 +13,10 @@ export default class Ball {
     public speed: number
     public radius: number
     public isActive: boolean
-    constructor(radius: number, speed: number,  ctx: CanvasRenderingContext2D) {
+    constructor(canvasWidth: number, canvasHeight: number, speed: number,  ctx: CanvasRenderingContext2D) {
         this.ctx = ctx
-        this.radius = radius
-        this.speed = speed * radius
+        this.radius = Math.min(canvasWidth * BALL_RADIUS_PERCENT, canvasHeight * BALL_RADIUS_PERCENT)
+        this.speed = speed * this.radius
         this.isActive = false
     }
 
