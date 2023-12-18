@@ -9,3 +9,7 @@ export const PADDLE_WIDTH_PERCENT = 0.018
 export const PADDLE_HEIGHT_PERCENT = 0.25
 export const PADDLE_DISTANCE_FROM_SIDE_PERCENT = 0.1
 export const OPPONENT_IDLE_INCORRECTNESS = 0.8
+
+export const CAMERA_SHAKE_FRAMES = 6
+
+export const WIN_SCORE = 3

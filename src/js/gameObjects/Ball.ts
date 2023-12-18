@@ -1,6 +1,5 @@
 import type {Point} from "./Point";
 import {AbstractVector, Vector} from "vector2d";
-import {BoundingBox} from "./BoundingBox";
 import {BALL_RADIUS_PERCENT} from "../constants";
 
 

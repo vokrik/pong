@@ -1,5 +1,6 @@
 import {assign, createMachine} from "xstate";
 import Pong from "./Pong";
+import {WIN_SCORE} from "./constants";
 
 const MAX_ELAPSED_TIME_MS = 50
 export const gamesState = createMachine(
@@ -139,10 +140,10 @@ export const gamesState = createMachine(
         actors: {},
         guards: {
             "Player Win Guard": ({ context, event }, params) => {
-                return context.score.player >= 2;
+                return context.score.player >= WIN_SCORE;
             },
             "Player Loose Guard": ({ context, event }, params) => {
-                return context.score.opponent >= 2;
+                return context.score.opponent >= WIN_SCORE;
             },
         },
         delays: {},
