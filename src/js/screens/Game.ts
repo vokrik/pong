@@ -3,7 +3,6 @@ import {Actor, SnapshotFrom} from "xstate";
 import {gamesState} from "../state";
 import Ball from "../gameObjects/Ball";
 import {Vector} from "vector2d";
-import {Point} from "../gameObjects/Point";
 import {Bounds, BOUNDS_TYPE, SIDE} from "../gameObjects/Bounds";
 import {
     GAME_BALL_SPEED,
@@ -14,6 +13,7 @@ import {
 } from "../constants";
 import Score from "../gameObjects/Score";
 import CameraShakeEffect from "../effects/CameraShakeEffect";
+import {Point} from "../sharedTypes";
 
 
 export default class Game {

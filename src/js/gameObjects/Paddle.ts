@@ -1,6 +1,5 @@
-import type {Point} from "./Point";
-import {Vector} from "vector2d";
 import {Bounds, BOUNDS_TYPE, SIDE} from "./Bounds";
+import {Point} from "../sharedTypes";
 
 const MOVEMENT_SPEED = 0.008
 const MAX_PADDLE_ANGLE = 0.9

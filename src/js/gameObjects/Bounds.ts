@@ -1,6 +1,6 @@
-import {Point} from "./Point";
 import {Vector} from "vector2d";
-import {BoundingBox, Line} from "./BoundingBox";
+import {BoundingBox, Line, Point} from "../sharedTypes";
+
 
 
 export enum SIDE {

@@ -1,6 +1,6 @@
-import type {Point} from "./Point";
 import {AbstractVector, Vector} from "vector2d";
 import {BALL_RADIUS_PERCENT} from "../constants";
+import {Point} from "../sharedTypes";
 
 
 
