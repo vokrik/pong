@@ -14,27 +14,24 @@ import {
 import Score from "../gameObjects/Score";
 import CameraShakeEffect from "../effects/CameraShakeEffect";
 import {Point} from "../sharedTypes";
+import {Screen} from "./Screen";
+import Particle from "../gameObjects/Particle";
+import CanvasAnalyzer from "../CanvasAnalyzer";
 
 
-export default class Game {
+export default class Game extends Screen{
 
-    private ctx: CanvasRenderingContext2D
     private player: Paddle
     private opponent: Paddle
     public ball: Ball
     private score: Score
-    private width: number
-    private height: number
     private boardBounds
-    private actor: Actor<typeof gamesState>
     private cameraShakeEffect
 
 
     constructor(width: number, height: number, actor: Actor<typeof gamesState>, ctx: CanvasRenderingContext2D) {
-        this.ctx = ctx
-        this.width = width
-        this.height = height
-        this.actor = actor
+        super("Game screen", width, height, actor, ctx)
+
 
         const paddleWidth = this.width * PADDLE_WIDTH_PERCENT
         const paddleHeight = this.height * PADDLE_HEIGHT_PERCENT
@@ -170,7 +167,7 @@ export default class Game {
 
     }
 
-    protected update() {
+    protected idleUpdate() {
         const state = this.actor.getSnapshot()
         this.movePlayer(state)
         this.moveOpponent(state)
@@ -180,10 +177,17 @@ export default class Game {
     }
 
 
+    protected getTransitionParticles(): Array<Particle> {
+        return CanvasAnalyzer.convertCanvasToParticles(this.width, this.height, () => {
+            this.player.render()
+            this.opponent.render()
+            this.score.render()
+        }, this.ctx)
+    }
+
     protected moveOpponent(state: SnapshotFrom<typeof gamesState>){
         const paddleCenter = this.opponent.getCenter()
         const distance = paddleCenter.y - this.ball.position.y
-
 
         if(Math.abs(distance) < 30 || Math.random() < OPPONENT_IDLE_INCORRECTNESS) {
             return
@@ -197,7 +201,7 @@ export default class Game {
         }
     }
 
-    public render() {
+    public idleRender() {
         this.update()
         this.ctx.fillStyle = "black"
         this.ctx.fillRect(0, 0, this.width, this.height)

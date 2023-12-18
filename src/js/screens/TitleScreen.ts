@@ -91,22 +91,11 @@ export default class TitleScreen extends Screen {
             y: this.mouse.y,
             radius: this.ball.radius
         })
-    }
-    protected alwaysUpdate() {
-        const state = this.actor.getSnapshot()
         this.particles.forEach(particle => particle.update(state.context.elapsedTimeMs))
     }
-
-    render() {
-        const state = this.actor.getSnapshot()
-        this.update()
-        this.ctx.fillStyle = "black"
-        this.ctx.fillRect(0, 0, this.width, this.height)
-
+    idleRender() {
         this.particles.map(particle => particle.draw())
-        if(state.matches({"Title screen": "Idle"})) {
-            this.ball.render()
-        }
+        this.ball.render()
     }
 }
 

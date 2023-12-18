@@ -1,7 +1,7 @@
 {
   "scripts": {
     "start": "webpack-dev-server --open --mode=development",
-    "prod": "webpack --mode=production"
+    "bundle": "webpack --mode=production"
   },
   "devDependencies": {
     "@xstate/cli": "^0.5.11",

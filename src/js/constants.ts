@@ -1,5 +1,5 @@
 export const TITLE_SCREEN_BALL_SPEED = 0.03
-export const GAME_BALL_SPEED = 0.07
+export const GAME_BALL_SPEED = 0.05
 export const FONT_SIZE_TITLE_TO_HEIGHT_RATIO = 0.15
 export const FONT_SIZE_SUBTITLE_TO_HEIGHT_RATIO = 0.03
 
@@ -13,3 +13,6 @@ export const OPPONENT_IDLE_INCORRECTNESS = 0.8
 export const CAMERA_SHAKE_FRAMES = 6
 
 export const WIN_SCORE = 3
+
+export const MOVEMENT_SPEED = 0.004
+export const MAX_PADDLE_ANGLE = 0.9

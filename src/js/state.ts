@@ -24,7 +24,7 @@ export const gamesState = createMachine(
                 states: {
                     "Transition In": {
                         after: {
-                            "1000": {
+                            "500": {
                                 target: "#Game state.Title screen.Idle",
                                 actions: [],
                             },
@@ -39,7 +39,7 @@ export const gamesState = createMachine(
                     },
                     "Transition Out": {
                         after: {
-                            "1000": {
+                            "300": {
                                 target: "#Game state.Game screen",
                                 actions: [],
                             },
@@ -94,11 +94,11 @@ export const gamesState = createMachine(
                         },
                         always: [
                             {
-                                target: "#Game state.Game over screen",
+                                target: "#Game state.Game screen.Transition Out",
                                 guard: "Player Win Guard",
                             },
                             {
-                                target: "#Game state.Game over screen",
+                                target: "#Game state.Game screen.Transition Out",
                                 guard: "Player Loose Guard",
                             },
                         ],
@@ -106,7 +106,7 @@ export const gamesState = createMachine(
                     },
                     "Transition Out": {
                         after: {
-                            "1000": {
+                            "500": {
                                 target: "#Game state.Game over screen",
                                 actions: [],
                             },
@@ -116,6 +116,19 @@ export const gamesState = createMachine(
 
             },
             "Game over screen": {
+                initial: "Transition In",
+                states: {
+                    "Transition In": {
+                        after: {
+                            "500": {
+                                target: "#Game state.Game over screen.Idle",
+                                actions: [],
+                            },
+                        },
+                    },
+                    "Idle": {
+                    },
+                },
             },
         },
         on: {

@@ -68,10 +68,10 @@ export default class Pong {
         this.ctx.clearRect(0, 0, this.width, this.height);
 
         const state = this.actor.getSnapshot()
-
+        this.gameOverScreen.render()
         if (state.matches("Title screen")) {
             this.titleScreen.render()
-        } else if(state.matches("Game over")) {
+        } else if(state.matches("Game over screen")) {
             this.gameOverScreen.render()
         } else {
             this.game.render()

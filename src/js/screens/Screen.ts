@@ -25,13 +25,15 @@ export abstract class Screen {
 
 
     protected abstract idleUpdate(): void
+    protected abstract idleRender(): void
     protected abstract getTransitionParticles(): Array<Particle>
-    protected abstract alwaysUpdate(): void
     protected update()
     {
         const state = this.actor.getSnapshot()
         if(state.matches({[this.name as string]: "Transition In"})) {
             if (!this.hasTransitionStarted) {
+                console.log('Starting transition in')
+
                 this.transitionEffect.startTransition(TransitionType.IN, this.getTransitionParticles())
                 this.hasTransitionStarted = true
             }
@@ -43,12 +45,38 @@ export abstract class Screen {
         }
         if(state.matches({[this.name as string]: "Transition Out"})){
             if(!this.hasTransitionStarted){
+                console.log('Starting transition out')
+
                 this.transitionEffect.startTransition(TransitionType.OUT, this.getTransitionParticles())
                 this.hasTransitionStarted = true
             }
             this.transitionEffect.use()
         }
-        this.alwaysUpdate()
+    }
+
+    public render() {
+        this.update()
+        this.ctx.fillStyle = "black"
+        this.ctx.fillRect(0, 0, this.width, this.height)
+        const state = this.actor.getSnapshot()
+        if(state.matches({[this.name as string]: "Transition In"})) {
+            if (!this.hasTransitionStarted) {
+                this.transitionEffect.startTransition(TransitionType.IN, this.getTransitionParticles())
+                this.hasTransitionStarted = true
+            }
+            this.transitionEffect.use()
+        }
+        if(state.matches({[this.name as string]: "Idle"})){
+            this.hasTransitionStarted = false
+            this.idleRender()
+        }
+        if(state.matches({[this.name as string]: "Transition Out"})){
+            if(!this.hasTransitionStarted){
+                this.transitionEffect.startTransition(TransitionType.OUT, this.getTransitionParticles())
+                this.hasTransitionStarted = true
+            }
+            this.transitionEffect.use()
+        }
     }
 
 

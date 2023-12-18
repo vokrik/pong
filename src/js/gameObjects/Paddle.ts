@@ -1,8 +1,8 @@
 import {Bounds, BOUNDS_TYPE, SIDE} from "./Bounds";
 import {Point} from "../sharedTypes";
+import {MAX_PADDLE_ANGLE, MOVEMENT_SPEED} from "../constants";
 
-const MOVEMENT_SPEED = 0.008
-const MAX_PADDLE_ANGLE = 0.9
+
 export default class Paddle {
     private ctx: CanvasRenderingContext2D
 
@@ -62,17 +62,6 @@ export default class Paddle {
     public render(): void {
         this.ctx.fillStyle = "white"
         this.ctx.fillRect(this.position.x, this.position.y, this.width, this.height)
-
-         const drawLine = (pointA: Point, pointB: Point) => {
-             this.ctx.beginPath();
-             this.ctx.strokeStyle = "white"
-             this.ctx.setLineDash([])
-             this.ctx.moveTo(pointA.x, pointA.y);
-             this.ctx.lineWidth = 1;
-
-             this.ctx.lineTo(pointB.x, pointB.y);
-             this.ctx.stroke();
-        }
 
     }
 }
