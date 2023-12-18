@@ -16,65 +16,106 @@ export const gamesState = createMachine(
             }
         },
         id: "Game state",
-        initial: "Display menu",
+        initial: "Title screen",
         states: {
-            "Display menu": {
-                on: {
-                    "Press Enter": {
-                        target: "Play game",
-                    },
-                },
-            },
-            "Play game": {
+
+            "Title screen": {
+                initial: "Transition In",
                 states: {
-                    Player: {
-                        initial: "Idle",
-                        states: {
-                            "Idle": {
-                                on: {
-                                    "Press Up": {
-                                        target: "Moving up",
-                                    },
-                                    "Press Down": {
-                                        target: "Moving down",
-                                    },
-                                },
+                    "Transition In": {
+                        after: {
+                            "1000": {
+                                target: "#Game state.Title screen.Idle",
+                                actions: [],
                             },
-                            "Moving up": {
-                                on: {
-                                    "Release Up": {
-                                        target: "Idle",
-                                    },
-                                },
+                        },
+                    },
+                    "Idle": {
+                        on: {
+                            "Press Enter": {
+                                target: "#Game state.Title screen.Transition Out",
                             },
-                            "Moving down": {
-                                on: {
-                                    "Release Down": {
-                                        target: "Idle",
-                                    },
-                                },
+                        },
+                    },
+                    "Transition Out": {
+                        after: {
+                            "1000": {
+                                target: "#Game state.Game screen",
+                                actions: [],
                             },
                         },
                     },
                 },
-                always: [
-                    {
-                        target: "#Game state.Game over.Player Won",
-                        guard: "Player Win Guard",
-                    },
-                    {
-                        target: "#Game state.Game over.Player Lost",
-                        guard: "Player Loose Guard",
-                    },
-                ],
-                type: "parallel",
+
             },
-            "Game over": {
-                initial: "Player Won",
+            "Game screen": {
+                initial: "Transition In",
                 states: {
-                    "Player Won": {},
-                    "Player Lost": {},
+                    "Transition In": {
+                        after: {
+                            "1000": {
+                                target: "#Game state.Game screen.Idle",
+                                actions: [],
+                            },
+                        },
+                    },
+                    "Idle": {
+                        initial: "Player",
+                        states: {
+                            Player: {
+                                initial: "Idle",
+                                states: {
+                                    "Idle": {
+                                        on: {
+                                            "Press Up": {
+                                                target: "Moving up",
+                                            },
+                                            "Press Down": {
+                                                target: "Moving down",
+                                            },
+                                        },
+                                    },
+                                    "Moving up": {
+                                        on: {
+                                            "Release Up": {
+                                                target: "Idle",
+                                            },
+                                        },
+                                    },
+                                    "Moving down": {
+                                        on: {
+                                            "Release Down": {
+                                                target: "Idle",
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                        always: [
+                            {
+                                target: "#Game state.Game over screen",
+                                guard: "Player Win Guard",
+                            },
+                            {
+                                target: "#Game state.Game over screen",
+                                guard: "Player Loose Guard",
+                            },
+                        ],
+                        type: "parallel",
+                    },
+                    "Transition Out": {
+                        after: {
+                            "1000": {
+                                target: "#Game state.Game over screen",
+                                actions: [],
+                            },
+                        },
+                    },
                 },
+
+            },
+            "Game over screen": {
             },
         },
         on: {

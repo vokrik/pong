@@ -7,31 +7,27 @@ import {Bounds, BOUNDS_TYPE} from "../gameObjects/Bounds";
 import {Actor} from "xstate";
 import {gamesState} from "../state";
 import {
-    TITLE_SCREEN_BALL_SPEED,
     FONT_SIZE_SUBTITLE_TO_HEIGHT_RATIO,
-    FONT_SIZE_TITLE_TO_HEIGHT_RATIO
+    FONT_SIZE_TITLE_TO_HEIGHT_RATIO,
+    TITLE_SCREEN_BALL_SPEED
 } from "../constants";
+import {Screen} from "./Screen";
 
 type Mouse = {
     x?: number,
     y?: number
 }
 
-export default class TitleScreen {
+export default class TitleScreen extends Screen {
 
-    private ctx: CanvasRenderingContext2D
-    private width: number
-    private height: number
-    private particles: Array<Particle>
+
+    public particles: Array<Particle>
     private ball
     private bounds
-    private actor
     private mouse: Mouse
-    constructor(width: number, height: number,actor: Actor<typeof gamesState>, ctx: CanvasRenderingContext2D) {
-        this.width = width
-        this.height = height
-        this.ctx = ctx
-        this.actor = actor
+    constructor( width: number, height: number,actor: Actor<typeof gamesState>, ctx: CanvasRenderingContext2D) {
+         super("Title screen", width, height, actor, ctx)
+
         this.particles = CanvasAnalyzer.convertCanvasToParticles(this.width, this.height, () => {
             const titleSize = Math.ceil(this.height * FONT_SIZE_TITLE_TO_HEIGHT_RATIO)
             const subtitleSize = Math.ceil(this.height * FONT_SIZE_SUBTITLE_TO_HEIGHT_RATIO)
@@ -65,10 +61,12 @@ export default class TitleScreen {
         this.ball.start({x: this.width/2, y: this.height/2}, (new Vector(1, 0)).rotate(Math.PI/3))
     }
 
+    protected getTransitionParticles(): Array<Particle> {
+        return this.particles;
+    }
 
-    private update() {
+    protected idleUpdate() {
         const state = this.actor.getSnapshot()
-
         this.ball.update(state.context.elapsedTimeMs)
 
         /**
@@ -93,16 +91,22 @@ export default class TitleScreen {
             y: this.mouse.y,
             radius: this.ball.radius
         })
+    }
+    protected alwaysUpdate() {
+        const state = this.actor.getSnapshot()
         this.particles.forEach(particle => particle.update(state.context.elapsedTimeMs))
     }
 
     render() {
+        const state = this.actor.getSnapshot()
         this.update()
         this.ctx.fillStyle = "black"
         this.ctx.fillRect(0, 0, this.width, this.height)
 
         this.particles.map(particle => particle.draw())
-        this.ball.render()
+        if(state.matches({"Title screen": "Idle"})) {
+            this.ball.render()
+        }
     }
 }
 

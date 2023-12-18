@@ -3,6 +3,7 @@ import {Actor, createActor} from "xstate";
 import Game from "./screens/Game";
 import TitleScreen from "./screens/TitleScreen";
 import GameOverScreen from "./screens/GameOver";
+import TransitionEffect, {TransitionType} from "./effects/TransitionEffect";
 
 
 export default class Pong {
@@ -14,6 +15,7 @@ export default class Pong {
     private titleScreen: TitleScreen
     private gameOverScreen: GameOverScreen
     private actor: Actor<typeof gamesState>
+
 
     constructor() {
         this.canvas = <HTMLCanvasElement>document.getElementById('canvas');
@@ -66,7 +68,8 @@ export default class Pong {
         this.ctx.clearRect(0, 0, this.width, this.height);
 
         const state = this.actor.getSnapshot()
-        if (state.matches("Display menu")) {
+
+        if (state.matches("Title screen")) {
             this.titleScreen.render()
         } else if(state.matches("Game over")) {
             this.gameOverScreen.render()

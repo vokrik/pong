@@ -74,11 +74,11 @@ export default class Game {
     }
 
     private movePlayer(state: SnapshotFrom<typeof gamesState>) {
-        if (state.matches({"Play game": {Player: "Moving up"}})) {
+        if (state.matches({"Game screen": {"Idle":{Player: "Moving up"}}})) {
             this.player.moveUp(state.context.elapsedTimeMs)
         }
 
-        if (state.matches({"Play game": {Player: "Moving down"}})) {
+        if (state.matches({"Game screen": {"Idle":{Player: "Moving down"}}})) {
             this.player.moveDown(state.context.elapsedTimeMs)
         }
     }
