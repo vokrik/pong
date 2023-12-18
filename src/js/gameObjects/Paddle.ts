@@ -1,6 +1,6 @@
 import type {Point} from "./Point";
 import {Vector} from "vector2d";
-import {Bounds, BOUNDS_TYPE} from "./Bounds";
+import {Bounds, BOUNDS_TYPE, SIDE} from "./Bounds";
 
 const MOVEMENT_SPEED = 0.008
 const MAX_PADDLE_ANGLE = 0.9
@@ -8,15 +8,16 @@ export default class Paddle {
     private ctx: CanvasRenderingContext2D
 
     private position: Point
-    private facingDirection: Vector
     public width: number
     public height: number
     private speed: number
+    public readonly  activeSide: SIDE.LEFT | SIDE.RIGHT
 
-    constructor(startingPosition: Point, facingDirection: Vector, width: number, height: number, ctx: CanvasRenderingContext2D) {
+    constructor(startingPosition: Point, activeSide: SIDE.LEFT | SIDE.RIGHT, width: number, height: number, ctx: CanvasRenderingContext2D) {
         this.ctx = ctx
         this.position = startingPosition
-        this.facingDirection = facingDirection
+        this.position = startingPosition
+        this.activeSide = activeSide
         this.width = width
         this.height = height
         this.speed = MOVEMENT_SPEED * height
@@ -50,8 +51,9 @@ export default class Paddle {
         const halfPaddleHeight = this.height / 2
         const paddleCenterY = this.position.y +  halfPaddleHeight
         const distanceFromCenter = point.y - paddleCenterY
+        const direction = this.activeSide === SIDE.LEFT ? -1 : 1
 
-        return  MAX_PADDLE_ANGLE * (distanceFromCenter / halfPaddleHeight) * Math.sign(this.facingDirection.x)
+        return  MAX_PADDLE_ANGLE * (distanceFromCenter / halfPaddleHeight) * direction
     }
     public moveToVerticalPosition(y: number, byTop: boolean = true) {
         this.position.y = byTop ? y : y - this.height

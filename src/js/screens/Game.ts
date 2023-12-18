@@ -9,13 +9,13 @@ import CanvasAnalyzer from "../CanvasAnalyzer";
 import Particle from "../gameObjects/Particle";
 import {Bounds, BOUNDS_TYPE, SIDE} from "../gameObjects/Bounds";
 import {
-    FONT_SIZE_TITLE_TO_HEIGHT_RATIO, GAME_BALL_SPEED, OPPONENT_IDLE_INCORRECTNESS,
+    FONT_SIZE_TITLE_TO_HEIGHT_RATIO,
+    GAME_BALL_SPEED,
+    OPPONENT_IDLE_INCORRECTNESS,
     PADDLE_DISTANCE_FROM_SIDE_PERCENT,
     PADDLE_HEIGHT_PERCENT,
     PADDLE_WIDTH_PERCENT
 } from "../constants";
-
-
 
 
 export default class Game {
@@ -39,6 +39,13 @@ export default class Game {
         this.width = width
         this.height = height
         this.actor = actor
+
+        const paddleWidth = this.width * PADDLE_WIDTH_PERCENT
+        const paddleHeight = this.height * PADDLE_HEIGHT_PERCENT
+        const xPadding = this.width * PADDLE_DISTANCE_FROM_SIDE_PERCENT
+        const yPosition = height / 2 - paddleHeight / 2
+
+
         this.boardBounds = new Bounds({
             tl: {x: 0, y: 0},
             tr: {x: width, y: 0},
@@ -46,30 +53,26 @@ export default class Game {
             br: {x: width, y: height},
         }, BOUNDS_TYPE.INNER)
 
-
-        const paddleWidth = this.width * PADDLE_WIDTH_PERCENT
-        const paddleHeight = this.height * PADDLE_HEIGHT_PERCENT
-        const xPadding = this.width * PADDLE_DISTANCE_FROM_SIDE_PERCENT
-        const yPosition = height / 2 - paddleHeight / 2
-
         this.player = new Paddle({
             x: xPadding,
             y: yPosition
-        }, new Vector(1, 0), paddleWidth, paddleHeight, this.ctx)
+        }, SIDE.RIGHT, paddleWidth, paddleHeight, this.ctx)
 
         this.opponent = new Paddle({
                 x: width - xPadding - paddleWidth,
                 y: yPosition
             },
-            new Vector(-1, 0), paddleWidth, paddleHeight,
+            SIDE.LEFT, paddleWidth, paddleHeight,
             this.ctx
         )
 
         this.ball = new Ball(this.width, this.height ,GAME_BALL_SPEED, this.ctx)
+
         this.ball.start({
             x: width / 2,
             y: height / 2
         }, new Vector(-10, 0))
+
         this.ballParticles = []
         this.convertScoreToParticles()
 
@@ -99,11 +102,6 @@ export default class Game {
             this.ctx.stroke();
         }, this.ctx)
     }
-    private convertBallToParticles() {
-        this.ballParticles = CanvasAnalyzer.convertCanvasToParticles(this.width, this.height, () => {
-            this.ball.render()
-        }, this.ctx)
-    }
 
 
     private movePlayer(state: SnapshotFrom<typeof gamesState>) {
@@ -118,6 +116,11 @@ export default class Game {
 
 
     protected resolveCollisions() {
+        this.resolvePaddleCollisionsWithBounds()
+        this.resolveBallCollisions()
+    }
+
+    private resolvePaddleCollisionsWithBounds() {
         let playerBounds = this.player.getBounds()
         let opponentBounds = this.opponent.getBounds()
 
@@ -125,39 +128,44 @@ export default class Game {
         const playersCollisionWithBounds = this.boardBounds.getBoxCollision({pointA: playerBounds.box.tr, pointB:playerBounds.box.br})
         if (playersCollisionWithBounds) {
             playersCollisionWithBounds.side === SIDE.TOP? this.player.moveToVerticalPosition(0) :   this.player.moveToVerticalPosition(this.height, false)
-            playerBounds = this.player.getBounds()
         }
 
         const opponentCollisionWithBound = this.boardBounds.getBoxCollision({pointA: opponentBounds.box.tr, pointB:opponentBounds.box.br})
         if (opponentCollisionWithBound) {
             opponentCollisionWithBound.side === SIDE.TOP? this.opponent.moveToVerticalPosition(0) :   this.opponent.moveToVerticalPosition(this.height, false)
-            opponentBounds = this.opponent.getBounds()
-
         }
+    }
 
+    private resolveBallCollisions() {
         let ballTraveledCollisionLine = this.ball.getTraveledCollisionLine()
         if(!ballTraveledCollisionLine){
             return
         }
-        const collisionWithPlayer = playerBounds.getBoxCollision(ballTraveledCollisionLine)
-        if (collisionWithPlayer && collisionWithPlayer.side === SIDE.RIGHT) {
-            const newPosition = collisionWithPlayer.collisionPoint
-            newPosition.x+=this.ball.radius
-            this.ball.setPosition(newPosition)
-            this.ball.setDirection(playerBounds.getSideNormal(collisionWithPlayer.side)
-                .rotate(this.player.getNormalRotationAtPoint(collisionWithPlayer.collisionPoint)))
-            ballTraveledCollisionLine = this.ball.getTraveledCollisionLine()
-        }
 
-        const collisionWithOpponent = opponentBounds.getBoxCollision(ballTraveledCollisionLine)
-        if (collisionWithOpponent && collisionWithOpponent.side === SIDE.LEFT) {
-            const newPosition = collisionWithOpponent.collisionPoint
-            newPosition.x-=this.ball.radius
+        this.resolveBallCollisionsWithPaddle(this.player)
+        this.resolveBallCollisionsWithPaddle(this.opponent)
+        this.resolveBallCollisionWithBounds()
+
+
+    }
+
+    private resolveBallCollisionsWithPaddle(paddle: Paddle) {
+        const paddleBounds = paddle.getBounds()
+        const ballTraveledCollisionLine = this.ball.getTraveledCollisionLine()
+        const collisionWithPaddle = paddleBounds.getBoxCollision(ballTraveledCollisionLine)
+
+        if (collisionWithPaddle && collisionWithPaddle.side === paddle.activeSide) {
+            const newPosition = collisionWithPaddle.collisionPoint
+            newPosition.x= collisionWithPaddle.side === SIDE.RIGHT ? newPosition.x + this.ball.radius : newPosition.x - this.ball.radius
+
             this.ball.setPosition(newPosition)
-            this.ball.setDirection(opponentBounds.getSideNormal(collisionWithOpponent.side)
-                .rotate(this.opponent.getNormalRotationAtPoint(collisionWithOpponent.collisionPoint)))
-            ballTraveledCollisionLine = this.ball.getTraveledCollisionLine()
+            this.ball.setDirection(paddleBounds.getSideNormal(paddle.activeSide)
+                .rotate(paddle.getNormalRotationAtPoint(collisionWithPaddle.collisionPoint)))
         }
+    }
+
+    private resolveBallCollisionWithBounds(){
+        const ballTraveledCollisionLine = this.ball.getTraveledCollisionLine()
 
         const collisionWithBounds = this.boardBounds.getBoxCollision(ballTraveledCollisionLine)
 
@@ -175,9 +183,7 @@ export default class Game {
                 this.boardBounds.getBoxCollision(ballTraveledCollisionLine)
             })
         }
-
     }
-
 
     protected resolveSideWallHit(collisionPoint: Point, isLeftWall: boolean) {
         isLeftWall ? this.actor.send({type:"Opponent Score"}) :  this.actor.send({type:"Player Score"})

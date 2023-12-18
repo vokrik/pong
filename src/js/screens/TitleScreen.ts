@@ -65,19 +65,24 @@ export default class TitleScreen {
         this.ball.start({x: this.width/2, y: this.height/2}, (new Vector(1, 0)).rotate(Math.PI/3))
     }
 
+
     private update() {
         const state = this.actor.getSnapshot()
+
         this.ball.update(state.context.elapsedTimeMs)
+
+        /**
+         * Resolve ball collisions
+         */
         const ballTraveledCollisionLine = this.ball.getTraveledCollisionLine()
-
         const collisionWithBounds = this.bounds.getBoxCollision(ballTraveledCollisionLine)
-
-
         if (collisionWithBounds) {
             this.ball.bounce(collisionWithBounds.collisionPoint, this.bounds.getSideNormal(collisionWithBounds.side))
         }
 
-
+        /**
+         * Apply particle effects
+         */
         CollisionEffect.use(this.particles, {
             x: this.ball.position.x,
             y: this.ball.position.y,
@@ -95,6 +100,7 @@ export default class TitleScreen {
         this.update()
         this.ctx.fillStyle = "black"
         this.ctx.fillRect(0, 0, this.width, this.height)
+
         this.particles.map(particle => particle.draw())
         this.ball.render()
     }
