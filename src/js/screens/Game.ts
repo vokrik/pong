@@ -1,28 +1,27 @@
-import Paddle from "./Paddle";
+import Paddle from "../gameObjects/Paddle";
 import {Actor, SnapshotFrom} from "xstate";
-import {gamesState} from "./state";
-import Ball, {BALL_RADIUS_PERCENT} from "./Ball";
+import {gamesState} from "../state";
+import Ball, {BALL_RADIUS_PERCENT} from "../gameObjects/Ball";
 import {Vector} from "vector2d";
-import {Point} from "./Point";
-import CollisionEffect from "./CollisionEffect";
-import CanvasAnalyzer from "./CanvasAnalyzer";
-import Particle from "./Particle";
-import {Bounds, BOUNDS_TYPE, SIDE} from "./Bounds";
-import HorizontalWallShatter from "./ShatterEffect";
-import ShatterEffect from "./ShatterEffect";
+import {Point} from "../gameObjects/Point";
+import CollisionEffect from "../effects/CollisionEffect";
+import CanvasAnalyzer from "../CanvasAnalyzer";
+import Particle from "../gameObjects/Particle";
+import {Bounds, BOUNDS_TYPE, SIDE} from "../gameObjects/Bounds";
 
 const PADDLE_WIDTH_PERCENT = 0.018
-const PADDLE_HEIGHT_PERCENT = 0.2
+const PADDLE_HEIGHT_PERCENT = 0.25
 const PADDLE_DISTANCE_FROM_SIDE_PERCENT = 0.1
-const OPPONENT_IDLE_INCORRECTNESS = 0.6
-const BALL_SPEED = 0.06
+const OPPONENT_IDLE_INCORRECTNESS = 0.8
+
+const BALL_SPEED = 0.07
 
 export default class Game {
 
-    private score = {
-        player: 0,
-        opponent: 0
-    }
+    // private score = {
+    //     player: 0,
+    //     opponent: 0
+    // }
     private ctx: CanvasRenderingContext2D
     private scoreParticles: Array<Particle>
     private ballParticles: Array<Particle>
@@ -33,6 +32,8 @@ export default class Game {
     private height: number
     private boardBounds
     private actor: Actor<typeof gamesState>
+    private cameraShakeFrames = 0
+    private cameraShakeIntensity = 0
 
 
     constructor(width: number, height: number, actor: Actor<typeof gamesState>, ctx: CanvasRenderingContext2D) {
@@ -77,13 +78,14 @@ export default class Game {
     }
 
     private convertScoreToParticles() {
-        this.scoreParticles = CanvasAnalyzer.convertCanvasToParticles(this.width, this.height, 4, () => {
+        const score = this.actor.getSnapshot().context.score
+        this.scoreParticles = CanvasAnalyzer.convertCanvasToParticles(this.width, this.height, () => {
             this.ctx.fillStyle = "white"
             this.ctx.font = `120px Helvetica`
             this.ctx.textAlign = "center"
             this.ctx.textBaseline = "middle"
             this.ctx.clearRect(0, 0, this.width, this.height)
-            this.ctx.fillText(`${this.score.player} : ${this.score.opponent}`, this.width / 2, this.height / 2)
+            this.ctx.fillText(`${score.player} : ${score.opponent}`, this.width / 2, this.height / 2)
             this.ctx.beginPath();
             this.ctx.strokeStyle = "white"
             this.ctx.setLineDash([5, 15]);
@@ -98,7 +100,7 @@ export default class Game {
         }, this.ctx)
     }
     private convertBallToParticles() {
-        this.ballParticles = CanvasAnalyzer.convertCanvasToParticles(this.width, this.height, 4, () => {
+        this.ballParticles = CanvasAnalyzer.convertCanvasToParticles(this.width, this.height, () => {
             this.ball.render()
         }, this.ctx)
     }
@@ -178,9 +180,8 @@ export default class Game {
 
 
     protected resolveSideWallHit(collisionPoint: Point, isLeftWall: boolean) {
-        isLeftWall ? this.score.opponent++ : this.score.player++
-        // this.convertBallToParticles()
-        // this.ballParticles.forEach((particle) => particle.vx = this.ball.direction.x * this.ball.speed * 100)
+        isLeftWall ? this.actor.send({type:"Opponent Score"}) :  this.actor.send({type:"Player Score"})
+        this.shakeCamera(5)
         this.ball.stopAndHide()
 
         setTimeout(() => {
@@ -209,7 +210,6 @@ export default class Game {
             y: this.ball.position.y,
             radius: this.ball.radius
         })
-        ShatterEffect.use(this.width, this.height,this.ballParticles)
         this.scoreParticles.forEach(particle => particle.update(state.context.elapsedTimeMs))
         this.ballParticles.forEach(particle => particle.update(state.context.elapsedTimeMs))
     }
@@ -243,6 +243,23 @@ export default class Game {
         this.scoreParticles.map(particle => particle.draw())
         this.ballParticles.map(particle => particle.draw())
         this.ball.render()
-
+        this.cameraShake()
     }
+
+    private shakeCamera(intensity: number) {
+        this.cameraShakeFrames = 6
+        this.cameraShakeIntensity = intensity
+    }
+    public cameraShake() {
+        if(this.cameraShakeFrames <= 0) {
+            return
+        }
+        const dx = Math.round( Math.cos((Math.PI / 6) * this.cameraShakeFrames) * this.cameraShakeIntensity)
+        const originalCanvasData =  this.ctx.getImageData(0, 0, this.width, this.height )
+        this.ctx.fillStyle = "black"
+        this.ctx.fillRect(0, 0, this.width, this.height)
+        this.ctx.putImageData(originalCanvasData, dx, 0)
+        this.cameraShakeFrames -= 1
+    }
+
 }

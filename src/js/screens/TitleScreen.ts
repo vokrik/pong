@@ -1,11 +1,11 @@
-import CollisionEffect from "./CollisionEffect";
-import CanvasAnalyzer from "./CanvasAnalyzer";
-import Particle from "./Particle";
-import Ball, {BALL_RADIUS_PERCENT} from "./Ball";
+import CollisionEffect from "../effects/CollisionEffect";
+import CanvasAnalyzer from "../CanvasAnalyzer";
+import Particle from "../gameObjects/Particle";
+import Ball, {BALL_RADIUS_PERCENT} from "../gameObjects/Ball";
 import {Vector} from "vector2d";
-import {Bounds, BOUNDS_TYPE, SIDE} from "./Bounds";
+import {Bounds, BOUNDS_TYPE, SIDE} from "../gameObjects/Bounds";
 import {Actor} from "xstate";
-import {gamesState} from "./state";
+import {gamesState} from "../state";
 
 type Mouse = {
     x?: number,
@@ -28,7 +28,7 @@ export default class TitleScreen {
         this.height = height
         this.ctx = ctx
         this.actor = actor
-        this.particles = CanvasAnalyzer.convertCanvasToParticles(this.width, this.height, 4, () => {
+        this.particles = CanvasAnalyzer.convertCanvasToParticles(this.width, this.height, () => {
             this.ctx.fillStyle = "white"
             this.ctx.font = `120px Silkscreen`
             this.ctx.textAlign = "center"

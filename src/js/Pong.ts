@@ -1,7 +1,8 @@
 import {gamesState} from "./state"
 import {Actor, createActor} from "xstate";
-import Game from "./Game";
-import TitleScreen from "./TitleScreen";
+import Game from "./screens/Game";
+import TitleScreen from "./screens/TitleScreen";
+import GameOverScreen from "./screens/GameOver";
 
 
 export default class Pong {
@@ -11,6 +12,7 @@ export default class Pong {
     private width: number = window.innerWidth;
     private game: Game
     private titleScreen: TitleScreen
+    private gameOverScreen: GameOverScreen
     private actor: Actor<typeof gamesState>
 
     constructor() {
@@ -21,6 +23,7 @@ export default class Pong {
         this.actor = createActor(gamesState).start();
         this.game = new Game(this.width, this.height, this.actor, this.ctx)
         this.titleScreen = new TitleScreen(this.width, this.height, this.actor, this.ctx)
+        this.gameOverScreen = new GameOverScreen(this.width, this.height, this.actor, this.ctx)
     }
 
     public setup(): void {
@@ -65,6 +68,8 @@ export default class Pong {
         const state = this.actor.getSnapshot()
         if (state.matches("Display menu")) {
             this.titleScreen.render()
+        } else if(state.matches("Game over")) {
+            this.gameOverScreen.render()
         } else {
             this.game.render()
         }

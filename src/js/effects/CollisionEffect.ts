@@ -1,4 +1,4 @@
-import Particle from "./Particle";
+import Particle from "../gameObjects/Particle";
 
 type CollisionPoint = {
     x?: number,
