@@ -1,5 +1,8 @@
 # Particle pong
 
+## Demo
+https://663b4bee798529f319e36856--astounding-sunflower-4fff3a.netlify.app/
+
 ## Installation 
 
 To start playing the game, you can simply open the `dist/index.html` file in your browser
